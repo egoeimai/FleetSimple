@@ -1,0 +1,40 @@
+{
+  "menu": [
+    {
+      "url": "/",
+      "name": "Αρχική",
+      "icon": "menu-icon tf-icons bx bx-home-circle",
+      "slug": "dashboard"
+    },
+    {
+      "url": "pages/clients",
+      "name": "Αθλητές",
+      "icon": "menu-icon tf-icons bx bx bx-dock-top",
+      "slug": "clients"
+    },
+    {
+      "url": "pages/financial",
+      "name": "Οικονομικά",
+      "icon": "menu-icon tf-icons bx bx bx-wallet-alt",
+      "slug": "financial"
+    },
+    {
+      "url": "pages/athlets-payments",
+      "name": "Συνδρομές/Μήνα",
+      "icon": "menu-icon tf-icons bx bx bx-wallet-alt",
+      "slug": "athlets-payments"
+    },
+    {
+      "url": "pages/coming-user",
+      "name": "Σελίδα Παρουσίας",
+      "icon": "menu-icon tf-icons bx bx bx-group",
+      "slug": "coming-user"
+    },
+    {
+      "url": "/auth/logout",
+      "name": "Έξοδος",
+      "icon": "menu-icon tf-icons bx bx-power-off",
+      "slug": "Log Out"
+    }
+  ]
+}
