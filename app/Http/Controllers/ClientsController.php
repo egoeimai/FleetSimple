@@ -7,6 +7,8 @@ use App\Models\Clients;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\Vehicle;
+use Carbon\Carbon;
 
 
 class ClientsController extends Controller
@@ -18,26 +20,23 @@ class ClientsController extends Controller
     public function index(Request $request)
     {
 
-        if (request('search')) {
-            $clients = Clients::where('firstName', 'like', '%' . request('search') . '%')->orWhere('lastName', 'like', '%' . request('search') . '%')->orWhere('phoneNumber', 'like', '%' . request('search') . '%')->orderBy('id', 'desc')->paginate(100);
-        } else {
-            $clients = Clients::orderBy('id', 'desc')->paginate(100);
-        }
+
+        $clients = Clients::with('vehicles')->orderBy('id', 'desc')->paginate(100); // Eager load vehicles
+
         //$clients = Clients::orderBy('id', 'desc')->paginate(5);
         $clientsCount = $clients->count();
 
-        return view('content.pages.clients', compact('clients', 'clientsCount'));
+        return view('clients.clients', compact('clients', 'clientsCount'));
     }
 
 
     public function filter(Request $request)
     {
 
-        $clients = Clients::where('category_athlete', '=',   $request->category_athlete)->orderBy('id', 'desc')->paginate(100);
-        //$clients = Clients::orderBy('id', 'desc')->paginate(5);
+        $clients = Clients::orderBy('id', 'desc')->paginate(20);
         $clientsCount = $clients->count();
 
-        return view('content.pages.clients', compact('clients', 'clientsCount'));
+        return view('clients.clients', compact('clients', 'clientsCount'));
     }
 
 
@@ -51,7 +50,7 @@ class ClientsController extends Controller
      */
     public function create()
     {
-        return view('content.pages.create-client');
+        return view('clients.create-client');
     }
 
     /**
@@ -63,11 +62,9 @@ class ClientsController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'firstName' => 'required',
-            'lastName' => 'required',
+
             'email' => 'required|email|unique:clients,email',
-            'phoneNumber' => 'required',
-            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+            'old_id' => 'required',
         ]);
 
         if ($request->file('image')) {
@@ -107,7 +104,28 @@ class ClientsController extends Controller
      */
     public function edit(Clients $client)
     {
-        return view('content.pages.pages-account-settings-account', compact('client'));
+        $client->load(['vehicles.subscriptions.service']); // Includes service details in subscriptions
+        
+        $upcomingRenewals = $client->vehicles
+        ->flatMap->subscriptions // Flatten subscriptions from all vehicles
+        ->filter(function ($subscription) {
+            return $subscription->status === 'active' &&
+                   Carbon::parse($subscription->renewal_date)->between(Carbon::now(), Carbon::now()->addDays(30));
+        });
+        
+        //dd($client->vehicles);
+        
+        $vehicleCount = $client->vehicles->count();
+
+        // Count the number of unique services
+        $serviceCount = $client->vehicles
+            ->flatMap->subscriptions // Flatten subscriptions from all vehicles
+            ->filter(function ($subscription) {
+                return $subscription->status === 'active'; // Filter only active subscriptions
+            })
+            ->pluck('service_id') // Extract service IDs
+            ->count();
+        return view('clients.edit', compact('client', 'upcomingRenewals', 'vehicleCount', 'serviceCount'));
     }
 
 
@@ -158,4 +176,31 @@ class ClientsController extends Controller
             return redirect()->route('clients')->with('success', 'Ο Αθλητης δεν έχει ενημερωθεί');
         }
     }
+    
+    
+
+public function upcomingRevenueByClient($clientId, $year = null)
+{
+
+    $client = Clients::with(['vehicles.subscriptions.service'])->findOrFail($clientId);
+    // Set default year to the current year if not provided
+    $year = $year ?? request()->input('year', Carbon::now()->year);
+
+    // Generate years array for the dropdown
+    $years = range(Carbon::now()->year, 2000);
+
+    // Filter subscriptions for the specified year
+    $subscriptionsForYear = $client->vehicles
+        ->flatMap->subscriptions
+        ->filter(function ($subscription) use ($year) {
+            return $subscription->status === 'active' &&
+                   Carbon::parse($subscription->renewal_date)->year == $year;
+        });
+
+    // Calculate total revenue for the year
+    $totalRevenue = $subscriptionsForYear->sum('total_cost');
+
+    return view('clients.upcoming_revenue', compact('client', 'subscriptionsForYear', 'totalRevenue', 'year', 'years'));
+}
+
 }

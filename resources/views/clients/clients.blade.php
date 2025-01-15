@@ -1,10 +1,10 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Αθλητές')
+@section('title', 'Clients')
 
 @section('content')
 <h4 class="fw-bold py-3 mb-4">
-    <span class="text-muted fw-light">Αθλητές /</span> Σύνολο {{ $clientsCount }} Αθλητές
+    <span class="text-muted fw-light">Πελάτες /</span> Σύνολο {{ $clientsCount }} Πελατών
 </h4>
 
 <!-- Basic Bootstrap Table -->
@@ -15,7 +15,7 @@
         <div class="card-body">
 
             <div class="">
-                <a href="{{ route('clients.create') }}" class="btn btn-primary">Προσθήκη Αθλούμενου</a>
+                <a href="{{ route('clients.create') }}" class="btn btn-primary">Προσθήκη Νέου Πελάτη</a>
 
             </div>
         </div>
@@ -27,7 +27,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="card mb-4 col-md-6">
+    <div class="card mb-4 col-md-12">
 
         <div class="card-body">
 
@@ -49,36 +49,8 @@
 
 
     </div>
-    <div class="card mb-4 col-md-4 offset-md-2">
-
-        <div class="card-body">
-
-            <form action="{{ route('clients-filter') }}" method="get">
-                <div class="row">
-                    <div class="col-md-8">
-                        <select id="category_athlete" class="form-select" name="category_athlete">
-                            <option>Κατηγορία Αθλητή</option>
-                            <option value="box">Box</option>
-                            <option value="fintess">Fitness</option>
-                            <option value="kids">Kids</option>
 
 
-
-
-
-
-
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="submit" class="form-control mb-3" value="filter">
-                    </div>
-                </div>
-            </form>
-
-        </div>
-    </div>
-    <hr class="m-0" />
 
 
 
@@ -93,35 +65,27 @@
     @endif
     <div class="card">
 
-        <h5 class="card-header">Αθλητές</h5>
+
         <div class="table-responsive text-nowrap">
             <table class="table">
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Όνομα</th>
-                        <th>ΤΗΛΕΦΩΝΟ</th>
+                        <th>email</th>
 
-                        <th>Καρτα Υγειας</th>
-                        <th>Κατηγορια</th>
-                        <th>Επεξεργασια</th>
+                        <th>Οχμήματα</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody class="table-border-bottom-0">
                     @foreach ($clients as $client)
                     <tr>
-                        <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong>{{ $client->firstName }} {{ $client->lastName }}</strong></td>
-                        <td>{{ $client->phoneNumber }}</td>
-                        <td>
-                            @if ($client->doctor == 1)
-                            <span class="badge bg-label-primary me-1">εχει προσκομησθει</span>
+                        <td>{{ $client->old_id }}</td>
+                        <td><i class="fab fa-angular fa-lg text-danger me-3"></i> <strong>{{ $client->first_name }} {{ $client->last_name }}</strong></td>
+                        <td>{{ $client->email }}</td>
 
-                            @else
-                            <span class="badge bg-label-warning me-1">Δεν υπάρχει</span>
-
-                            @endif
-                        </td>
-                        <td>{{ $client->category_athlete }}</td>
+                        <td> {{ $client->vehicles->pluck('license_plate')->join(', ') }}</td>
                         <td>
 
                             <a class="btn btn-success" href="{{ route('clients.edit',$client->id) }}"><i class="bx bx-edit-alt me-1"></i>Επεξεργασία</a>

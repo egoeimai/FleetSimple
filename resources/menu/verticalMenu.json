@@ -7,6 +7,21 @@
       "slug": "dashboard"
     },
 
+    {
+      "url": "/clients",
+      "name": "Πελάτες",
+      "icon": "menu-icon tf-icons bx bx-home-circle",
+      "slug": "clients"
+    },
+
+    
+    {
+      "url": "/services",
+      "name": "Υπηρεσίες",
+      "icon": "menu-icon tf-icons bx bx-home-circle",
+      "slug": "services"
+    },
+
 
     {
       "url": "/auth/logout",

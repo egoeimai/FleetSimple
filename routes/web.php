@@ -114,4 +114,48 @@ Route::get('/form/layouts-horizontal', $controller_path . '\form_layouts\Horizon
 Route::get('/tables/basic', $controller_path . '\tables\Basic@index')->name('tables-basic');
 
 
+
+//Clients Routes
+Route::get('clients', $controller_path . '\ClientsController@index')->name('clients');
+
+Route::get('/pages/clients-filter', $controller_path . '\ClientsController@filter')->name('clients-filter');
+Route::get('/pages/clients-create', $controller_path . '\ClientsController@create')->name('clients.create');
+Route::post('/pages/clients-create', $controller_path . '\ClientsController@store')->name('clients.store');
+Route::put('/pages/clients-update', $controller_path . '\ClientsController@update')->name('clients.update');
+Route::delete('/pages/clients-destroy', $controller_path . '\ClientsController@destroy')->name('clients.destroy');
+Route::get('/pages/clients-edit/{client}', $controller_path . '\ClientsController@edit')->name('clients.edit');
+
+Route::get('/pages/clients-edit/{clientId}/revenue/{year?}', $controller_path . '\ClientsController@upcomingRevenueByClient')->name('clients.revenue');
+
+
+
+
+// Vehicles Routes
+use App\Http\Controllers\VehicleController;
+
+Route::get('/vehicles/create/{client}', [VehicleController::class, 'create'])->name('vehicles.create');
+Route::get('/vehicles/{vehicle}', [VehicleController::class, 'edit'])->name('vehicles.edit');
+Route::put('/vehicles/{vehicle}', [VehicleController::class, 'update'])->name('vehicles.update');
+Route::post('/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
+Route::delete('/vehicles/{vehicle}', [VehicleController::class, 'destroy'])->name('vehicles.destroy');
+
+// Services Routes
+
+use App\Http\Controllers\ServicesController;
+
+Route::resource('services', ServicesController::class);
+
+
+// Subscriptions Routes
+use App\Http\Controllers\SubscriptionController;
+
+Route::get('/subscriptions/create/{vehicle}', [SubscriptionController::class, 'create'])->name('subscriptions.create');
+Route::post('/subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
+Route::get('/subscriptions/{subscription}/edit', [SubscriptionController::class, 'edit'])->name('subscriptions.edit');
+Route::put('/subscriptions/{subscription}', [SubscriptionController::class, 'update'])->name('subscriptions.update');
+Route::delete('/subscriptions/{subscription}', [SubscriptionController::class, 'destroy'])->name('subscriptions.destroy');
+Route::post('/subscriptions/{id}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
+
+
+
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
