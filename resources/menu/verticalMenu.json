@@ -21,6 +21,15 @@
       "icon": "menu-icon tf-icons bx bx-home-circle",
       "slug": "services"
     },
+    
+    {
+      "url": "/settings",
+      "name": "Ρυθμίσεις",
+      "icon": "menu-icon tf-icons bx bx-home-circle",
+      "slug": "settings"
+    },
+
+    
 
 
     {

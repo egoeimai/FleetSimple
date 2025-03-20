@@ -17,7 +17,9 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('subscriptions:check-status')->daily();
+        $schedule->command('subscriptions:send-reminders')->daily();
     }
+
 
     /**
      * Register the commands for the application.

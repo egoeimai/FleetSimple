@@ -25,6 +25,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 // Main Page Route
 Route::get('/', $controller_path . '\MainDashboard@index')->name('dashboard');
+Route::get('/sent-emails/{id}',  $controller_path . '\MainDashboard@show')->name('sent-emails.show');
 
 // layout
 Route::get('/layouts/without-menu', $controller_path . '\layouts\WithoutMenu@index')->name('layouts-without-menu');
@@ -127,9 +128,10 @@ Route::get('/pages/clients-edit/{client}', $controller_path . '\ClientsControlle
 
 Route::get('/pages/clients-edit/{clientId}/revenue/{year?}', $controller_path . '\ClientsController@upcomingRevenueByClient')->name('clients.revenue');
 
+use App\Http\Controllers\SettingController;
 
-
-
+Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
+Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 // Vehicles Routes
 use App\Http\Controllers\VehicleController;
 
@@ -144,6 +146,8 @@ Route::delete('/vehicles/{vehicle}', [VehicleController::class, 'destroy'])->nam
 use App\Http\Controllers\ServicesController;
 
 Route::resource('services', ServicesController::class);
+
+
 
 
 // Subscriptions Routes
