@@ -13,7 +13,7 @@
     <div class="card">
 
         <div class="card-header d-sm-flex align-items-center justify-content-between">
-            <h2>Χρήστες</h2> <a href="{{ route('admin.users.create') }}" class="btn btn-primary">Add New User</a>
+            <h2>Χρήστες</h2> <a href="{{ route('users.create') }}" class="btn btn-primary">Add New User</a>
         </div>
         <div class="table-responsive text-nowrap">
             <table class="table">
@@ -33,8 +33,8 @@
                         <td>{{ $user->email }}</td>
                         <td>{{ $user->roles->pluck('name')->join(', ') }}</td>
                         <td>
-                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-secondary">Edit</a>
-                            <form action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display:inline;">
+                            <a href="{{ route('users.edit', $user) }}" class="btn btn-secondary">Edit</a>
+                            <form action="{{ route('users.destroy', $user) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger">Delete</button>

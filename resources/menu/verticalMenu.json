@@ -29,6 +29,13 @@
       "slug": "settings"
     },
 
+       {
+      "url": "/users",
+      "name": "Χρήστες",
+      "icon": "menu-icon tf-icons bx bx-home-circle",
+      "slug": "users"
+    },
+
     
 
 

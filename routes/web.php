@@ -20,11 +20,16 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ClientController;
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('users', UserController::class);
+    //Route::resource('users', UserController::class);
     Route::resource('clients', ClientController::class);
 });
+
+
 // Main Page Route
 Route::get('/', $controller_path . '\MainDashboard@index')->name('dashboard');
+Route::resource('users', UserController::class);
+ //Route::resource('users', UserController::class);
+
 Route::get('/sent-emails/{id}',  $controller_path . '\MainDashboard@show')->name('sent-emails.show');
 
 // layout
