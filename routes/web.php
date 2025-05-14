@@ -148,6 +148,12 @@ use App\Http\Controllers\ServicesController;
 Route::resource('services', ServicesController::class);
 
 
+use App\Http\Controllers\ImportController;
+Route::post('/import-clients-vehicles', [ImportController::class, 'importClients'])->name('import.clients_vehicles');
+Route::post('/import-vehicles', [ImportController::class, 'importVehicles'])->name('import.vehicles');
+
+Route::post('/import-subscriptions', [ImportController::class, 'importSubscriptions'])->name('import.subscriptions');
+
 
 
 // Subscriptions Routes

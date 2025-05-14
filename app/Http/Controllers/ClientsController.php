@@ -21,7 +21,7 @@ class ClientsController extends Controller
     {
 
 
-        $clients = Clients::with('vehicles')->orderBy('id', 'desc')->paginate(100); // Eager load vehicles
+        $clients = Clients::with('vehicles')->orderBy('id', 'desc')->get(); // Eager load vehicles
 
         //$clients = Clients::orderBy('id', 'desc')->paginate(5);
         $clientsCount = $clients->count();

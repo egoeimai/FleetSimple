@@ -65,4 +65,23 @@
         <button type="submit" class="btn btn-primary">Save Settings</button>
     </form>
 </div>
+
+<form action="{{ route('import.clients_vehicles') }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    <input type="file" name="file" required>
+    <button type="submit">Import Clients & Vehicles</button>
+</form>
+
+<form action="{{ route('import.vehicles') }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    <input type="file" name="file" required>
+    <button type="submit">Import Clients & Vehicles</button>
+</form>
+
+
+<form action="{{ route('import.subscriptions') }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    <input type="file" name="file" required>
+    <button type="submit" class="btn btn-warning mt-2">Import Subscriptions</button>
+</form>
 @endsection
