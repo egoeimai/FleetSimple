@@ -59,11 +59,10 @@ class SendSubscriptionReminders extends Command
 
         // Get all clients with subscriptions expiring in or near these dates
         $clients = Clients::whereHas('vehicles.subscriptions', function ($query) use ($reminderDates) {
-            $query->where('status', 'active')
-                ->whereIn('renewal_date', $reminderDates);
+            $query->where('status', 'active')->whereIn('renewal_date', $reminderDates->toArray());
         })->with(['vehicles.subscriptions' => function ($query) use ($reminderDates) {
             $query->where('status', 'active')
-                ->whereIn('renewal_date', $reminderDates)
+                ->whereIn('renewal_date', $reminderDates->toArray())
                 ->with('service', 'vehicle');
         }])->get();
 
@@ -72,13 +71,19 @@ class SendSubscriptionReminders extends Command
             $servicesByVehicle = [];
             $groupedSubscriptions = [];
 
+
             foreach ($client->vehicles as $vehicle) {
                 // Get subscriptions that expire in the reminder period
-                $expiringSubscriptions = $vehicle->subscriptions->filter(function ($sub) use ($reminderDates) {
-                    return in_array(Carbon::parse($sub->renewal_date)->toDateString(), $reminderDates->toArray());
-                });
+                
+$expiringSubscriptions = $vehicle->subscriptions
+    ->filter(function ($sub) use ($reminderDates) {
+        return in_array(Carbon::parse($sub->renewal_date)->toDateString(), $reminderDates->toArray());
+    })
+    ->unique('id');
+                
 
                 // Now, also check for other subscriptions that expire within 10 days of any of those dates
+                  $processedSubscriptionIds = [];
                 foreach ($expiringSubscriptions as $subscription) {
                     $reminderDate = Carbon::parse($subscription->renewal_date);
                     $mergeStart = $reminderDate->copy();
@@ -89,34 +94,39 @@ class SendSubscriptionReminders extends Command
                         return $subDate->between($mergeStart, $mergeEnd);
                     });
 
+
+                 
+
                     foreach ($nearbySubscriptions as $nearSub) {
                         $nearDate = Carbon::parse($nearSub->renewal_date)->toDateString();
 
-                        // **Check if an email was already sent for this period**
                         $alreadySent = SentEmail::where('client_id', $client->id)
                             ->where('sent_for_date', $nearDate)
                             ->exists();
 
-                        if (!$alreadySent) {
+                        if (!$alreadySent && !in_array($nearSub->id, $processedSubscriptionIds)) {
                             $vehicleKey = "{$vehicle->brand} {$vehicle->model} ({$vehicle->license_plate})";
 
                             $groupedSubscriptions[$nearDate][$vehicleKey][] = [
                                 'service' => $nearSub->service->title,
                                 'renewal_date' => Carbon::parse($nearSub->renewal_date)->format('d M Y'),
-                                'cost' => $nearSub->total_cost
+                                'cost' => number_format($nearSub->total_cost, 2)
                             ];
+
+                            $processedSubscriptionIds[] = $nearSub->id;
                         }
                     }
+                    
                 }
             }
 
-if (!empty($groupedSubscriptions)) {
-    $totalCost = collect($groupedSubscriptions)
-        ->flatMap(fn($vehicles) => collect($vehicles)->flatMap(fn($services) => $services))
-        ->sum('cost');
+            if (!empty($groupedSubscriptions)) {
+                $totalCost = collect($groupedSubscriptions)
+                    ->flatMap(fn($vehicles) => collect($vehicles)->flatMap(fn($services) => $services))
+                    ->sum('cost');
 
-    $this->sendReminderEmail($client, $groupedSubscriptions, $totalCost);
-}
+                $this->sendReminderEmail($client, $groupedSubscriptions, $totalCost);
+            }
         }
 
         $this->info('Subscription reminders sent successfully.');
@@ -129,6 +139,7 @@ if (!empty($groupedSubscriptions)) {
      */
     private function sendReminderEmail($client, $groupedSubscriptions, $totalCost)
     {
+
         $now = Carbon::now();
         $greeting = "Καλημέρα!";
 
@@ -148,7 +159,7 @@ if (!empty($groupedSubscriptions)) {
             'greeting' => $greeting,
             'customGreeting' => $customGreeting
         ], function ($message) use ($client) {
-            $message->to('nziozas@gmail.com')
+              $message->to(['nziozas@gmail.com', 'gstavrou@fleetsimple.gr'])
                 ->subject("Subscription Reminder");
         });
 

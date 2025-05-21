@@ -33,10 +33,28 @@ class ClientsController extends Controller
     public function filter(Request $request)
     {
 
-        $clients = Clients::orderBy('id', 'desc')->paginate(20);
-        $clientsCount = $clients->count();
+           $search = $request->input('search');
 
-        return view('clients.clients', compact('clients', 'clientsCount'));
+    $clients = Clients::with('vehicles')
+        ->when($search, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('company_name', 'like', "%{$search}%")
+                  ->orWhere('old_id', 'like', "%{$search}%");
+            })->orWhereHas('vehicles', function ($q) use ($search) {
+                $q->where('license_plate', 'like', "%{$search}%")
+                  ->orWhere('brand', 'like', "%{$search}%")
+                  ->orWhere('model', 'like', "%{$search}%");
+            });
+        })
+        ->orderBy('id', 'desc')
+        ->get();
+
+    $clientsCount = $clients->count();
+
+    return view('clients.clients', compact('clients', 'clientsCount'));
     }
 
 
@@ -89,10 +107,10 @@ class ClientsController extends Controller
      * @param  \App\Clients  $company
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Clients $clients)
+    public function destroy(Clients $client)
     {
-        $clients->delete();
-        return redirect()->route('clients')->with('success', 'Company has been Updated successfully');
+        $client->delete();
+        return redirect()->route('clients')->with('success', 'Client has been Deleted successfully');
     }
 
 

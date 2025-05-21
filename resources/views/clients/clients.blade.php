@@ -31,7 +31,7 @@
 
         <div class="card-body">
 
-            <form action="{{ route('clients') }}" method="get">
+            <form action="{{ route('clients-filter') }}" method="get">
                 <div class="row">
                     <div class="col-md-10">
                         <input type="text" class="form-control mb-3" placeholder="search" name="search" value="{{ request('search') }}">

@@ -42,6 +42,8 @@ return [
     */
 
   'debug' => (bool) env('APP_DEBUG', false),
+  
+  'reminder_trigger_key' => env('REMINDER_TRIGGER_KEY', 'default'),
 
   /*
     |--------------------------------------------------------------------------

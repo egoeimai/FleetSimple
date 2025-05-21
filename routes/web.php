@@ -24,6 +24,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('clients', ClientController::class);
 });
 
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/trigger-reminders', function (Illuminate\Http\Request $request) {
+    if ($request->input('key') !== config('app.reminder_trigger_key')) {
+        abort(403, 'Unauthorized');
+    }
+
+    Artisan::call('subscriptions:send-reminders');
+
+    return response()->json(['status' => 'Reminders sent']);
+});
+
 
 // Main Page Route
 Route::get('/', $controller_path . '\MainDashboard@index')->name('dashboard');
@@ -54,7 +66,7 @@ Route::get('/pages/clients-filter', $controller_path . '\ClientsController@filte
 Route::get('/pages/clients-create', $controller_path . '\ClientsController@create')->name('clients.create');
 Route::post('/pages/clients-create', $controller_path . '\ClientsController@store')->name('clients.store');
 Route::put('/pages/clients-update', $controller_path . '\ClientsController@update')->name('clients.update');
-Route::delete('/pages/clients-destroy', $controller_path . '\ClientsController@destroy')->name('clients.destroy');
+//Route::delete('/pages/clients-destroy/{client}', $controller_path . '\ClientsController@destroy')->name('clients.destroy');
 Route::get('/pages/clients-edit/{client}', $controller_path . '\ClientsController@edit')->name('clients.edit');
 Route::get('/pages/coming-user', $controller_path . '\ComingController@index')->name('coming.index');
 Route::post('/pages/coming-user-search', $controller_path . '\ComingController@search')->name('coming.search');
@@ -128,7 +140,7 @@ Route::get('/pages/clients-filter', $controller_path . '\ClientsController@filte
 Route::get('/pages/clients-create', $controller_path . '\ClientsController@create')->name('clients.create');
 Route::post('/pages/clients-create', $controller_path . '\ClientsController@store')->name('clients.store');
 Route::put('/pages/clients-update', $controller_path . '\ClientsController@update')->name('clients.update');
-Route::delete('/pages/clients-destroy', $controller_path . '\ClientsController@destroy')->name('clients.destroy');
+Route::delete('/pages/clients-destroy/{client}', $controller_path . '\ClientsController@destroy')->name('clients.destroy');
 Route::get('/pages/clients-edit/{client}', $controller_path . '\ClientsController@edit')->name('clients.edit');
 
 Route::get('/pages/clients-edit/{clientId}/revenue/{year?}', $controller_path . '\ClientsController@upcomingRevenueByClient')->name('clients.revenue');
