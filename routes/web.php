@@ -31,7 +31,10 @@ Route::get('/trigger-reminders', function (Illuminate\Http\Request $request) {
         abort(403, 'Unauthorized');
     }
 
-    Artisan::call('subscriptions:send-reminders');
+    //Artisan::call('subscriptions:send-reminders');
+    Artisan::call('subscriptions:check-status');
+    Artisan::call('subscriptions:schedule-reminders');
+    Artisan::call('subscriptions:send-scheduled');
 
     return response()->json(['status' => 'Reminders sent']);
 });

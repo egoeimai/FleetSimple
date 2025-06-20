@@ -127,7 +127,7 @@ class ScheduledEmailController extends Controller
             'greeting' => $greeting,
             'customGreeting' => $customGreeting,
         ], function ($message) use ($client) {
-            $message->to('nziozas@gmail.com')
+           $message->to(['nziozas@gmail.com', 'gstavrou@fleetsimple.gr'])
                 ->subject("Subscription Reminder");
         });
 
