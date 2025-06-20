@@ -44,15 +44,31 @@ class MainDashboard extends Controller
         }])->get();
         
         
+$nextSevenDaysEmails = \App\Models\ScheduledEmail::with('client')
+    ->whereBetween('send_date', [
+        now()->toDateString(),
+        now()->copy()->addDays(14)->toDateString()
+    ])
+    ->orderBy('send_date')
+    ->get();
+    
+
+    
         $sentEmails = SentEmail::with('client')->latest()->paginate(10);
         
-        return view('content.dashboard.dashboards-analytics' , compact('sentEmails', 'upcomingClients', 'totalClients', 'totalVehicles', 'totalRevenue'));
+        return view('content.dashboard.dashboards-analytics' , compact('sentEmails', 'upcomingClients', 'totalClients', 'totalVehicles', 'totalRevenue', 'nextSevenDaysEmails'));
     }
     
     public function show($id)
     {
         $sentEmail = SentEmail::with('client')->findOrFail($id);
         return view('emails.display_email', compact('sentEmail'));
+    }
+    
+        public function upcoming_show($id)
+    {
+        $sentEmail = \App\Models\ScheduledEmail::with('client')->findOrFail($id);
+        return view('emails.display_email_upcoming', compact('sentEmail'));
     }
     
 

@@ -18,7 +18,10 @@ class Analytics extends Controller
 
   public function index()
   {
+    
+
+    
     $sentEmails = SentEmail::with('client')->latest()->paginate(10);
-    return view('content.dashboard.dashboards-analytic' , compact('sentEmails'));
+    return view('content.dashboard.dashboards-analytic' , compact('nextSevenDaysEmails'));
   }
 }

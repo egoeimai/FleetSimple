@@ -77,7 +77,7 @@
     <div class="card">
       <div class="row row-bordered g-0">
         <div class="col-md-12">
-          <h5 class="card-header m-0 me-2 pb-3">Emails Have Been Send</h5>
+          <h5 class="card-header m-0 me-2 pb-3">Emails που θα σταλούν</h5>
           <div class="card-body">
             @if($sentEmails->isEmpty())
             <p>No emails have been sent yet.</p>
@@ -86,20 +86,30 @@
               <thead>
                 <tr>
                   <th>Client</th>
-                  <th>Email</th>
                   <th>Total Cost</th>
                   <th>Sent At</th>
-                  <th>Actions</th>
+                  <th>Cancel</th>
+                  <th>Send Now</th>
+                  <th>View</th>
                 </tr>
               </thead>
               <tbody>
-                @foreach($sentEmails as $email)
+                @foreach($nextSevenDaysEmails as $email)
                 <tr>
-                  <td>{{ $email->client->name }}</td>
-                  <td>{{ $email->email }}</td>
+                  <td>{{ $email->client->email }}</td>
                   <td>€{{ number_format($email->total_cost, 2) }}</td>
-                  <td>{{ $email->created_at->format('d M Y, H:i') }}</td>
-                  <td><a href="{{ route('sent-emails.show', $email->id) }}" target="_blank" class="btn btn-primary">View</a></td>
+                  <td>{{ $email->send_date->format('d M Y, H:i') }}</td>
+                  <td><a href="{{ route('sent-emails.upcoming_show', $email->id) }}" target="_blank" class="btn btn-primary">Cancel</a></td>
+                  <td>
+                    <form method="POST" action="{{ route('scheduled-emails.sendNow', $email->id) }}" style="display:inline;">
+                      @csrf
+                      <button class="btn btn-sm btn-warning" type="submit"
+                        onclick="return confirm('Να σταλεί το email τώρα;')">
+                        Send Now
+                      </button>
+                    </form>
+                  </td>
+                  <td><a href="{{ route('sent-emails.upcoming_show', $email->id) }}" target="_blank" class="btn btn-primary">View</a></td>
                 </tr>
                 @endforeach
               </tbody>
@@ -175,42 +185,42 @@
       <div class="card-header d-flex align-items-center justify-content-between pb-0">
         <div class="card-title mb-0">
           <h5 class="m-0 me-2">Up Coming Renewals</h5>
-         
+
         </div>
       </div>
       <div class="card-body">
-      @if($upcomingClients->isEmpty())
+        @if($upcomingClients->isEmpty())
         <p>No scheduled email reminders for the next 5 days.</p>
-    @else
+        @else
         <table class="table">
-            <thead>
-                <tr>
-                    <th>Client</th>
-                    <th>Email</th>
-                    <th>Vehicle</th>
-                    <th>Service</th>
-                    <th>Renewal Date</th>
-                    <th>Total Cost</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($upcomingClients as $client)
-                    @foreach($client->vehicles as $vehicle)
-                        @foreach($vehicle->subscriptions as $subscription)
-                            <tr>
-                                <td>{{ $client->name }}</td>
-                                <td>{{ $client->email }}</td>
-                                <td>{{ $vehicle->brand }} {{ $vehicle->model }} ({{ $vehicle->license_plate }})</td>
-                                <td>{{ $subscription->service->title }}</td>
-                                <td>{{ \Carbon\Carbon::parse($subscription->renewal_date)->format('d M Y') }}</td>
-                                <td>€{{ number_format($subscription->total_cost, 2) }}</td>
-                            </tr>
-                        @endforeach
-                    @endforeach
-                @endforeach
-            </tbody>
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Email</th>
+              <th>Vehicle</th>
+              <th>Service</th>
+              <th>Renewal Date</th>
+              <th>Total Cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($upcomingClients as $client)
+            @foreach($client->vehicles as $vehicle)
+            @foreach($vehicle->subscriptions as $subscription)
+            <tr>
+              <td>{{ $client->name }}</td>
+              <td>{{ $client->email }}</td>
+              <td>{{ $vehicle->brand }} {{ $vehicle->model }} ({{ $vehicle->license_plate }})</td>
+              <td>{{ $subscription->service->title }}</td>
+              <td>{{ \Carbon\Carbon::parse($subscription->renewal_date)->format('d M Y') }}</td>
+              <td>€{{ number_format($subscription->total_cost, 2) }}</td>
+            </tr>
+            @endforeach
+            @endforeach
+            @endforeach
+          </tbody>
         </table>
-    @endif
+        @endif
       </div>
     </div>
   </div>

@@ -43,6 +43,7 @@ Route::resource('users', UserController::class);
  //Route::resource('users', UserController::class);
 
 Route::get('/sent-emails/{id}',  $controller_path . '\MainDashboard@show')->name('sent-emails.show');
+Route::get('/upcoming-emails/{id}',  $controller_path . '\MainDashboard@upcoming_show')->name('sent-emails.upcoming_show');
 
 // layout
 Route::get('/layouts/without-menu', $controller_path . '\layouts\WithoutMenu@index')->name('layouts-without-menu');
@@ -183,6 +184,8 @@ Route::put('/subscriptions/{subscription}', [SubscriptionController::class, 'upd
 Route::delete('/subscriptions/{subscription}', [SubscriptionController::class, 'destroy'])->name('subscriptions.destroy');
 Route::post('/subscriptions/{id}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
 
+Route::post('/scheduled-emails/{id}/send-now', [App\Http\Controllers\ScheduledEmailController::class, 'sendNow'])
+    ->name('scheduled-emails.sendNow');
 
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

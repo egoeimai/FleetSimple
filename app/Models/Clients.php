@@ -15,4 +15,6 @@ class Clients extends Model
     {
         return $this->hasMany(Vehicle::class, 'client_id'); // Explicitly define the foreign key column
     }
+    
+
 }

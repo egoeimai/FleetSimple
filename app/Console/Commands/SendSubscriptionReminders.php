@@ -74,16 +74,16 @@ class SendSubscriptionReminders extends Command
 
             foreach ($client->vehicles as $vehicle) {
                 // Get subscriptions that expire in the reminder period
-                
-$expiringSubscriptions = $vehicle->subscriptions
-    ->filter(function ($sub) use ($reminderDates) {
-        return in_array(Carbon::parse($sub->renewal_date)->toDateString(), $reminderDates->toArray());
-    })
-    ->unique('id');
-                
+
+                $expiringSubscriptions = $vehicle->subscriptions
+                    ->filter(function ($sub) use ($reminderDates) {
+                        return in_array(Carbon::parse($sub->renewal_date)->toDateString(), $reminderDates->toArray());
+                    })
+                    ->unique('id');
+
 
                 // Now, also check for other subscriptions that expire within 10 days of any of those dates
-                  $processedSubscriptionIds = [];
+                $processedSubscriptionIds = [];
                 foreach ($expiringSubscriptions as $subscription) {
                     $reminderDate = Carbon::parse($subscription->renewal_date);
                     $mergeStart = $reminderDate->copy();
@@ -95,7 +95,7 @@ $expiringSubscriptions = $vehicle->subscriptions
                     });
 
 
-                 
+
 
                     foreach ($nearbySubscriptions as $nearSub) {
                         $nearDate = Carbon::parse($nearSub->renewal_date)->toDateString();
@@ -116,7 +116,6 @@ $expiringSubscriptions = $vehicle->subscriptions
                             $processedSubscriptionIds[] = $nearSub->id;
                         }
                     }
-                    
                 }
             }
 
@@ -137,19 +136,28 @@ $expiringSubscriptions = $vehicle->subscriptions
     /**
      * Send reminder email to the client.
      */
-    private function sendReminderEmail($client, $groupedSubscriptions, $totalCost)
+
+
+    private function sendReminderEmail($email)
     {
+        $client = $email->client;
+        $groupedSubscriptions = $email->subscriptions; // Already array
+        $totalCost = collect($groupedSubscriptions)
+            ->flatMap(fn($v) => $v)
+            ->sum(fn($s) => (float)$s['cost']);
 
-        $now = Carbon::now();
-        $greeting = "Καλημέρα!";
+        // Set greeting based on send_date (not now), for accurate future email rendering
+        $sendDate = $email->send_date instanceof \Carbon\Carbon ? $email->send_date : \Carbon\Carbon::parse($email->send_date);
 
-        if ($now->day == 1) {
+        if ($sendDate->day == 1) {
             $greeting = "Καλημέρα και Καλό Μήνα";
-        } elseif ($now->isMonday()) {
+        } elseif ($sendDate->isMonday()) {
             $greeting = "Καλημέρα και Καλή Εβδομάδα";
+        } else {
+            $greeting = "Καλημέρα!";
         }
 
-        $settings = Setting::first();
+        $settings = \App\Models\Setting::first();
         $customGreeting = $settings->greeting_text ?? '';
 
         Mail::send('emails.subscription_reminder', [
@@ -157,23 +165,15 @@ $expiringSubscriptions = $vehicle->subscriptions
             'groupedSubscriptions' => $groupedSubscriptions,
             'totalCost' => $totalCost,
             'greeting' => $greeting,
-            'customGreeting' => $customGreeting
+            'customGreeting' => $customGreeting,
         ], function ($message) use ($client) {
-              $message->to(['nziozas@gmail.com', 'gstavrou@fleetsimple.gr'])
+            $message->to($client->email)
                 ->subject("Subscription Reminder");
         });
 
-        // **Store the sent email record**
-        foreach ($groupedSubscriptions as $renewalDate => $subscriptions) {
-            SentEmail::create([
-                'client_id' => $client->id,
-                'email' => "nziozas@gmail.com",
-                'services' => $subscriptions,
-                'total_cost' => $totalCost,
-                'greeting' => $greeting,
-                'custom_message' => $customGreeting,
-                'sent_for_date' => $renewalDate // Store for tracking
-            ]);
-        }
+        $email->update([
+            'sent' => true,
+            'sent_at' => now(),
+        ]);
     }
 }

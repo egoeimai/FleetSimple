@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="el">
+
 <head>
     <meta charset="UTF-8">
     <title>FleetSimple - Υπενθύμιση Συνδρομής</title>
 </head>
+
 <body style="font-family: sans-serif; color: #333;">
     <!-- Χαιρετισμός -->
     <h2>{{ $greeting }}</h2>
 
     @if (!empty($customGreeting))
-        <p><strong>{{ $customGreeting }}</strong></p>
+    <p><strong>{{ $customGreeting }}</strong></p>
     @endif
 
     <p>
@@ -17,22 +19,28 @@
     </p>
 
     @if (!empty($groupedSubscriptions))
-        <h3>Επερχόμενες Λήξεις Υπηρεσιών:</h3>
-        @foreach($groupedSubscriptions as $date => $vehicles)
-            <h4>Ημερομηνία Λήξης: {{ $date }}</h4>
-            @foreach($vehicles as $vehicle => $services)
-                <h5>Όχημα: {{ $vehicle }}</h5>
-                <ul>
-                    @foreach($services as $service)
-                        <li>
-                            Υπηρεσία: {{ $service['service'] }}<br>
-                            Ημερομηνία Λήξης: {{ $service['renewal_date'] }}<br>
-                            Κόστος: €{{ number_format($service['cost'], 2) }}
-                        </li>
-                    @endforeach
-                </ul>
+    <h3>Επερχόμενες Λήξεις Υπηρεσιών:</h3>
+    @php
+    $subscriptions = is_array($groupedSubscriptions)
+    ? $groupedSubscriptions
+    : json_decode($groupedSubscriptions, true);
+    @endphp
+
+    @foreach ($subscriptions as $vehicle => $services)
+    <div>
+        <strong>Όχημα:</strong> {{ $vehicle }}
+        <ul>
+            @foreach ($services as $service)
+            <div>
+                Υπηρεσία: {{ $service['service'] }}<br>
+                Ημερομηνία Λήξης: {{ $service['renewal_date'] }}<br>
+                Κόστος: €{{ $service['cost'] }}<br>
+
+            </div>
             @endforeach
-        @endforeach
+        </ul>
+    </div>
+    @endforeach
     @endif
 
     <h3>Συνολικό Ποσό Ανανέωσης: €{{ number_format($totalCost, 2) }}</h3>
@@ -43,20 +51,20 @@
 
     <ul>
         <li><strong>Eurobank</strong><br>
-        IBAN: GR5802600990000320200675895<br>
-        Δικαιούχος: FleetSimple Μονοπρόσωπη ΙΚΕ</li>
+            IBAN: GR5802600990000320200675895<br>
+            Δικαιούχος: FleetSimple Μονοπρόσωπη ΙΚΕ</li>
 
         <li><strong>Πειραιώς</strong><br>
-        IBAN: GR1801715580006558146790758<br>
-        Δικαιούχος: FleetSimple Μονοπρόσωπη ΙΚΕ</li>
+            IBAN: GR1801715580006558146790758<br>
+            Δικαιούχος: FleetSimple Μονοπρόσωπη ΙΚΕ</li>
 
         <li><strong>Εθνική Τράπεζα</strong><br>
-        IBAN: GR2601101820000018200421370<br>
-        Δικαιούχος: FleetSimple Μονοπρόσωπη ΙΚΕ</li>
+            IBAN: GR2601101820000018200421370<br>
+            Δικαιούχος: FleetSimple Μονοπρόσωπη ΙΚΕ</li>
 
         <li><strong>Alpha Bank</strong><br>
-        IBAN: GR2101403490349002002009969<br>
-        Δικαιούχος: FleetSimple Μονοπρόσωπη ΙΚΕ</li>
+            IBAN: GR2101403490349002002009969<br>
+            Δικαιούχος: FleetSimple Μονοπρόσωπη ΙΚΕ</li>
     </ul>
 
     <p>
@@ -65,4 +73,5 @@
 
     <p>Σας ευχαριστούμε για τη συνεργασία.<br>Η ομάδα του FleetSimple</p>
 </body>
+
 </html>

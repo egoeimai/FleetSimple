@@ -4,14 +4,14 @@
 <div class="container">
     <h1>📧 Sent Email Details</h1>
 
-    <p><strong>Client:</strong> {{ $sentEmail->client->name }}</p>
+    <p><strong>Client:</strong> {{ $sentEmail->client->email }}</p>
     <p><strong>Email:</strong> {{ $sentEmail->email }}</p>
     <p><strong>Sent At:</strong> {{ $sentEmail->created_at->format('d M Y, H:i') }}</p>
     <p><strong>Greeting:</strong> {{ $sentEmail->greeting }}</p>
     <p><strong>Custom Message:</strong> {{ $sentEmail->custom_message }}</p>
     <h3>Expiring Services:</h3>
 
-    @foreach($sentEmail->services as $vehicleData)
+    @foreach($sentEmail->subscriptions as $vehicleData)
         <h4>🚗 Vehicle: {{ $vehicleData['vehicle'] }}</h4>
         <ul>
             @foreach($vehicleData['services'] as $service)
