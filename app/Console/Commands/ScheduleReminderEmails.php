@@ -41,9 +41,9 @@ class ScheduleReminderEmails extends Command
         $reminderDays = array_map('intval', (array) $settings->email_days ?? [30, 15, 5]);
         $excludedDays = $settings->excluded_days ?? []; // e.g., ['Saturday', 'Sunday']
         $excludedDates = $settings->excluded_dates ?? []; // e.g., ['2023-12-25']
-        
+
         $schedulingWindowStart = Carbon::today();
-        $schedulingWindowEnd = Carbon::today()->addDays(12);
+        $schedulingWindowEnd = Carbon::today()->addDays(max($reminderDays) + 5); // +5 for safety
 
         // Calculate the maximum lookahead needed for the database query
         $maxRenewalLookahead = $schedulingWindowEnd->copy()->addDays(max($reminderDays) + 21); // Add a buffer
@@ -66,11 +66,18 @@ class ScheduleReminderEmails extends Command
         foreach ($subscriptions as $subscription) {
             $renewalDate = Carbon::parse($subscription->renewal_date);
 
+            // Replace this with your actual logic for checking payment
+            $isPaid = $subscription->isPaid(); // You must implement this!
+
+            // If already paid, skip all reminders
+            if ($isPaid) {
+                continue;
+            }
+
             foreach ($reminderDays as $days) {
-                // Calculate the ideal send date by subtracting days from the renewal date
                 $idealSendDate = $renewalDate->copy()->subDays($days);
-                
-                // Adjust to the PREVIOUS working day if the ideal date is a weekend or excluded
+
+                // Move to previous working day if excluded (weekends/holidays)
                 while (
                     in_array($idealSendDate->format('l'), $excludedDays)
                     || in_array($idealSendDate->toDateString(), $excludedDates)
@@ -78,41 +85,35 @@ class ScheduleReminderEmails extends Command
                     $idealSendDate->subDay();
                 }
 
-                // If this reminder's send date falls within our 7-day scheduling window...
+                // Only schedule reminders that fall within the defined window
                 if ($idealSendDate->between($schedulingWindowStart, $schedulingWindowEnd)) {
-                    $client = $subscription->vehicle->client;
-                    $vehicle = $subscription->vehicle;
-                    
-                    // The KEY for grouping: One entry per client, per day.
-                    $scheduleKey = "{$client->id}-{$idealSendDate->toDateString()}";
-                    
-                    // The KEY for sub-grouping within the email: by vehicle.
-                    $vehicleKey = trim("{$vehicle->brand} {$vehicle->model} ({$vehicle->license_plate})");
-                    
-                    // Initialize the email group if it's the first time we see this client/date combo
-                    if (!isset($emailsToSchedule[$scheduleKey])) {
-                        $emailsToSchedule[$scheduleKey] = [
-                            'client_id' => $client->id,
-                            'send_date' => $idealSendDate->toDateString(),
-                            'subscriptions_by_vehicle' => [], // This will hold the final grouped data
-							 'total_cost' => 0, // <<-- ADDED: Initialize total cost
-                        ];
+                    // Check if this reminder has already been scheduled
+                    $alreadyScheduled = ScheduledEmail::where('subscription_id', $subscription->id)
+                        ->where('send_date', $idealSendDate->toDateString())
+                        ->where('type', 'reminder') // Adjust type if needed
+                        ->exists();
+
+                    if (!$alreadyScheduled) {
+                        // Create scheduled email (adjust payload as needed)
+                        ScheduledEmail::create([
+                            'client_id'      => $subscription->vehicle->client_id,
+                            'subscription_id' => $subscription->id,
+                            'send_date'      => $idealSendDate->toDateString(),
+                            'type'           => 'reminder', // or your preferred type
+                            'data'           => json_encode([
+                                'service'      => $subscription->service->title,
+                                'renewal_date' => $renewalDate->format('d M Y'),
+                                'cost'         => number_format($subscription->total_cost, 2),
+                                'reminder_type' => "{$days} Day Reminder",
+                            ]),
+                            'sent'           => false,
+                        ]);
                     }
-                    
-                    // Add the subscription details to the correct vehicle group
-                    $emailsToSchedule[$scheduleKey]['subscriptions_by_vehicle'][$vehicleKey][] = [
-                        'service' => $subscription->service->title,
-                        'renewal_date' => $renewalDate->format('d M Y'),
-                        'cost' => number_format($subscription->total_cost, 2),
-                        'reminder_type' => "{$days} Day Reminder", // Include for clarity in the email
-                    ];
-					
-					// <<-- ADDED: Add this subscription's cost to the running total
-                    $emailsToSchedule[$scheduleKey]['total_cost'] += $subscription->total_cost;
                 }
             }
         }
-        
+
+
         // --- 4. Create or Update the ScheduledEmail Records in the Database ---
         if (empty($emailsToSchedule)) {
             $this->info('No emails to schedule for the next 7 days.');
@@ -131,7 +132,7 @@ class ScheduleReminderEmails extends Command
                 [
                     // This is the payload, containing all subscriptions grouped by vehicle
                     'subscriptions' => json_encode($scheduleData['subscriptions_by_vehicle']),
-					 'total_cost' => $scheduleData['total_cost'], // <<-- ADDED: Save the calculated 
+                    'total_cost' => $scheduleData['total_cost'], // <<-- ADDED: Save the calculated 
                     'sent' => false,
                 ]
             );

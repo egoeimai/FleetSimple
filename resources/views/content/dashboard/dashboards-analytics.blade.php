@@ -14,7 +14,15 @@
 <script src="{{asset('assets/js/dashboards-analytics.js')}}"></script>
 @endsection
 
+
+
 @section('content')
+
+@if ($message = Session::get('success'))
+<div class="alert alert-success">
+    <p>{{ $message }}</p>
+</div>
+@endif
 <div class="row">
   <div class="col-lg-8 mb-4 order-0">
     <div class="card">
