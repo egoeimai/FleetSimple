@@ -88,9 +88,9 @@ class ScheduleReminderEmails extends Command
                 // Only schedule reminders that fall within the defined window
                 if ($idealSendDate->between($schedulingWindowStart, $schedulingWindowEnd)) {
                     // Check if this reminder has already been scheduled
-                    $alreadyScheduled = ScheduledEmail::where('subscription_id', $subscription->id)
+                    $alreadyScheduled = ScheduledEmail::where('client_id', $subscription->vehicle->client_id)
                         ->where('send_date', $idealSendDate->toDateString())
-                        ->where('type', 'reminder') // Adjust type if needed
+                        ->where('type', 'reminder')
                         ->exists();
 
                     if (!$alreadyScheduled) {

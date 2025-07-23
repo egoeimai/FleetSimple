@@ -27,9 +27,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 use Illuminate\Support\Facades\Artisan;
 
 Route::get('/trigger-reminders', function (Illuminate\Http\Request $request) {
-    if ($request->input('key') !== config('app.reminder_trigger_key')) {
-        abort(403, 'Unauthorized');
-    }
+    // if ($request->input('key') !== config('app.reminder_trigger_key')) {
+    //     abort(403, 'Unauthorized');
+    // }
 
     //Artisan::call('subscriptions:send-reminders');
     Artisan::call('subscriptions:check-status');
