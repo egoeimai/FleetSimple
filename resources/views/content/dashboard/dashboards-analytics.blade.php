@@ -123,7 +123,7 @@
               </tbody>
             </table>
 
-            {{ $sentEmails->links() }}
+          
             @endif
           </div>
         </div>
