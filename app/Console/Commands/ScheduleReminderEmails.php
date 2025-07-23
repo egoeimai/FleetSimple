@@ -38,7 +38,8 @@ class ScheduleReminderEmails extends Command
         }
 
         // --- 1. Define Parameters & Date Ranges ---
-        $reminderDays = array_map('intval', (array) $settings->email_days ?? [30, 15, 5]);
+        $reminderDays = array_map('intval', explode(',', $settings->email_days[0] ?? '30,15,5'));
+        
         $excludedDays = $settings->excluded_days ?? []; // e.g., ['Saturday', 'Sunday']
         $excludedDates = $settings->excluded_dates ?? []; // e.g., ['2023-12-25']
 
@@ -60,6 +61,7 @@ class ScheduleReminderEmails extends Command
             return self::SUCCESS;
         }
 
+
         // --- 3. Process Subscriptions and Group Them by Client and Send Date ---
         $emailsToSchedule = [];
 
@@ -73,6 +75,8 @@ class ScheduleReminderEmails extends Command
             if ($isPaid) {
                 continue;
             }
+            
+            
 
             foreach ($reminderDays as $days) {
                 $idealSendDate = $renewalDate->copy()->subDays($days);
@@ -94,20 +98,32 @@ class ScheduleReminderEmails extends Command
                         ->exists();
 
                     if (!$alreadyScheduled) {
-                        // Create scheduled email (adjust payload as needed)
-                        ScheduledEmail::create([
-                            'client_id'      => $subscription->vehicle->client_id,
-                            'subscription_id' => $subscription->id,
-                            'send_date'      => $idealSendDate->toDateString(),
-                            'type'           => 'reminder', // or your preferred type
-                            'data'           => json_encode([
-                                'service'      => $subscription->service->title,
-                                'renewal_date' => $renewalDate->format('d M Y'),
-                                'cost'         => number_format($subscription->total_cost, 2),
-                                'reminder_type' => "{$days} Day Reminder",
-                            ]),
-                            'sent'           => false,
-                        ]);
+                        $client = $subscription->vehicle->client;
+                        $vehicle = $subscription->vehicle;
+                        $vehicleKey = "({$vehicle->license_plate})";
+
+                        $scheduleKey = "{$client->id}-{$idealSendDate->toDateString()}";
+
+                        // Initialize grouping if not exists
+                        if (!isset($emailsToSchedule[$scheduleKey])) {
+                            $emailsToSchedule[$scheduleKey] = [
+                                'client_id' => $client->id,
+                                'send_date' => $idealSendDate->toDateString(),
+                                'subscriptions_by_vehicle' => [],
+                                'total_cost' => 0,
+                                'reminder_type' => "",
+                            ];
+                        }
+
+                        $emailsToSchedule[$scheduleKey]['subscriptions_by_vehicle'][$vehicleKey][] = [
+                            'service' => $subscription->service->title,
+                            'renewal_date' => $renewalDate->format('d M Y'),
+                            'cost' => number_format($subscription->total_cost, 2),
+                            'reminder_type' => "{$days} Day Reminder",
+                        ];
+
+                        $emailsToSchedule[$scheduleKey]['total_cost'] += $subscription->total_cost;
+                        $emailsToSchedule[$scheduleKey]['reminder_type'] = "{$days} Day Reminder";
                     }
                 }
             }
@@ -127,7 +143,7 @@ class ScheduleReminderEmails extends Command
                     // These fields uniquely identify a single scheduled email
                     'client_id' => $scheduleData['client_id'],
                     'send_date' => $scheduleData['send_date'],
-                    'type' => 'grouped_reminder', // A generic type for these grouped emails
+                    'type' => $scheduleData['reminder_type'], // A generic type for these grouped emails
                 ],
                 [
                     // This is the payload, containing all subscriptions grouped by vehicle
