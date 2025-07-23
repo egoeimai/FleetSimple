@@ -33,4 +33,10 @@ class Subscription extends Model
     {
         return $this->belongsTo(Service::class);
     }
+    
+    public function isPaid()
+{
+    // Adjust the column name or logic based on your DB schema
+    return $this->status === 'paid' || $this->payment_status === 'paid';
+}
 }
